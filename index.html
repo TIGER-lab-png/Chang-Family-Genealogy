@@ -143,8 +143,8 @@ body{font-family:'Microsoft JhengHei','微軟正黑體',Arial,sans-serif;backgro
 
 
 /* PHOTO & DOCS */
-.person-photo{width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--border);cursor:pointer;flex-shrink:0}
-.photo-placeholder{width:72px;height:72px;border-radius:50%;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:11px;text-align:center;flex-shrink:0;background:var(--bg);transition:background .2s}
+.person-photo{width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid var(--border);cursor:pointer;flex-shrink:0}
+.photo-placeholder{width:90px;height:90px;border-radius:50%;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:13px;text-align:center;flex-shrink:0;background:var(--bg);transition:background .2s}
 .photo-placeholder:hover{background:#ece5d8}
 .person-header{display:flex;align-items:center;gap:12px;margin-bottom:6px}
 .person-header-text{flex:1;min-width:0}
@@ -184,9 +184,20 @@ body{font-family:'Microsoft JhengHei','微軟正黑體',Arial,sans-serif;backgro
 .ci-ok{padding:6px 14px;border-radius:8px;border:none;background:var(--red2);color:#fff;cursor:pointer;font-size:12px;font-family:inherit;font-weight:bold}
 .ci-cancel{padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:12px;font-family:inherit;color:var(--muted)}
 
+/* INTRO SECTION */
+.intro-section{margin-top:6px;border-top:1px solid #eee;padding-top:8px}
+.intro-title{font-size:13px;font-weight:bold;color:var(--muted);padding:4px 0 8px;display:flex;align-items:center;justify-content:space-between}
+.intro-body{font-size:14px;color:var(--text);line-height:1.75;white-space:pre-wrap;word-break:break-word;background:#faf7f2;border-radius:10px;padding:10px 12px;min-height:50px}
+.intro-body.empty{color:#ccc;font-style:italic;font-size:13px;min-height:44px;display:flex;align-items:center}
+.intro-edit-area{display:none;flex-direction:column;gap:6px;margin-top:6px}
+.intro-edit-area.open{display:flex}
+.intro-edit-area textarea{padding:10px 12px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;outline:none;resize:vertical;min-height:100px;line-height:1.7}
+.intro-edit-area textarea:focus{border-color:var(--red)}
+.intro-hint{font-size:11px;color:#bbb;padding:2px 0}
+
 /* MOBILE adjustments for panel */
 @media(max-width:768px){
-  .person-photo,.photo-placeholder{width:56px;height:56px}
+  .person-photo,.photo-placeholder{width:72px;height:72px}
   .docs-grid{grid-template-columns:repeat(auto-fill,minmax(70px,1fr))}
 }
 @media(min-width:769px){
@@ -210,15 +221,18 @@ body{font-family:'Microsoft JhengHei','微軟正黑體',Arial,sans-serif;backgro
   #ip.mobile-open{transform:translateY(0)}
   #ip::before{content:'';display:block;width:40px;height:5px;background:var(--border);border-radius:3px;margin:0 auto 12px}
   #ip-close-btn{display:flex;position:absolute;top:14px;right:14px;width:32px;height:32px;align-items:center;justify-content:center;background:var(--bg);border:1px solid var(--border);border-radius:50%;cursor:pointer;font-size:18px;color:var(--muted)}
+  /* zoom controls: right side, bottom of tree area */
   #ctrl{left:auto;right:12px;bottom:calc(60vh + 12px);transition:bottom .35s}
   body.panel-open #ctrl{bottom:12px}
   .cb{width:46px;height:46px;font-size:20px}
+  /* action buttons: left side, bottom of tree area */
   #btn-row{left:12px;bottom:calc(60vh + 12px);flex-direction:column;gap:6px;transition:bottom .35s}
   body.panel-open #btn-row{bottom:12px}
   .tr-btn{font-size:14px;padding:10px 14px}
   #legend{display:none}
-  #sync-dot{top:auto;bottom:calc(60vh + 60px);left:12px}
-  #admin-trigger{top:auto;bottom:calc(60vh + 56px);right:12px;font-size:12px}
+  /* sync dot & admin: move to TOP of screen (below header), no overlap with buttons */
+  #sync-dot{top:116px;bottom:auto;left:8px}
+  #admin-trigger{top:112px;bottom:auto;right:6px;font-size:12px}
   #dev-credit{display:none}
   .nname{font-size:14px}
   .iname{font-size:22px}
@@ -226,7 +240,8 @@ body{font-family:'Microsoft JhengHei','微軟正黑體',Arial,sans-serif;backgro
   #apply-btn,#report-btn{font-size:15px;padding:13px}
   .modal{max-width:100%!important;border-radius:16px;max-height:85vh}
   .overlay{padding:10px}
-  #mob-help-btn{display:flex;position:fixed;bottom:calc(60vh + 70px);left:12px;width:44px;height:44px;border-radius:50%;background:var(--red);color:#fff;border:none;font-size:20px;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.3);z-index:151}
+  /* help button: above the action buttons, same left side */
+  #mob-help-btn{display:flex;position:fixed;bottom:calc(60vh + 128px);left:12px;width:44px;height:44px;border-radius:50%;background:var(--red);color:#fff;border:none;font-size:20px;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.3);z-index:151}
 }
 @media(min-width:769px){
   #ip-close-btn{display:none}
@@ -746,6 +761,7 @@ function renderContacts(pKey){
   }).join('');
   return `<div class="contact-section">
     <div class="contact-title">📇 個人聯絡資訊 <span style="font-size:11px;color:#bbb;font-weight:normal">（自行填寫，即時更新）</span></div>
+    ${renderIntro(pKey)}
     ${rows}
   </div>`;
 }
@@ -778,6 +794,62 @@ async function saveContact(pKey,field){
   }
   closeContactEdit(pKey,field);
   // 寫入 Firebase（無需審核）
+  await dbSet('contacts/'+pKey,personContacts[pKey]);
+}
+
+// ── 人物簡介 / 自我介紹 ──
+function renderIntro(pKey){
+  const ct=personContacts[pKey]||{};
+  const intro=(ct.intro||'').trim();
+  const safeKey=pKey.replace(/[^a-z0-9]/gi,'_');
+  const bodyHtml=intro
+    ?`<div class="intro-body" id="intro-body-${safeKey}">${intro.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`
+    :`<div class="intro-body empty" id="intro-body-${safeKey}">尚無簡介，點擊「✏ 編輯」填寫</div>`;
+  return `<div class="intro-section">
+    <div class="intro-title">
+      <span>📝 人物簡介 / 自我介紹</span>
+      <button class="contact-edit-btn" onclick="openIntroEdit('${pKey}')">✏ 編輯</button>
+    </div>
+    ${bodyHtml}
+    <div class="intro-edit-area" id="intro-edit-${safeKey}">
+      <textarea id="intro-ta-${safeKey}" placeholder="可以介紹自己、或描述這位族人的生平事蹟、個性、成就…&#10;（支援換行，無字數限制）">${intro.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+      <div class="intro-hint">💡 現代族人可介紹自己；也可幫祖先記錄生平故事</div>
+      <div class="contact-inline-btns">
+        <button class="ci-ok" onclick="saveIntro('${pKey}')">儲存</button>
+        <button class="ci-cancel" onclick="closeIntroEdit('${pKey}')">取消</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function openIntroEdit(pKey){
+  const safeKey=pKey.replace(/[^a-z0-9]/gi,'_');
+  const el=document.getElementById('intro-edit-'+safeKey);
+  if(el){el.classList.add('open');const ta=document.getElementById('intro-ta-'+safeKey);if(ta)ta.focus();}
+}
+function closeIntroEdit(pKey){
+  const safeKey=pKey.replace(/[^a-z0-9]/gi,'_');
+  const el=document.getElementById('intro-edit-'+safeKey);if(el)el.classList.remove('open');
+}
+async function saveIntro(pKey){
+  const safeKey=pKey.replace(/[^a-z0-9]/gi,'_');
+  const ta=document.getElementById('intro-ta-'+safeKey);
+  if(!ta)return;
+  const val=ta.value.trim();
+  if(!personContacts[pKey])personContacts[pKey]={};
+  personContacts[pKey].intro=val;
+  // 立即更新顯示
+  const bodyEl=document.getElementById('intro-body-'+safeKey);
+  if(bodyEl){
+    if(val){
+      bodyEl.className='intro-body';
+      bodyEl.innerHTML=val.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }else{
+      bodyEl.className='intro-body empty';
+      bodyEl.innerHTML='尚無簡介，點擊「✏ 編輯」填寫';
+    }
+  }
+  closeIntroEdit(pKey);
   await dbSet('contacts/'+pKey,personContacts[pKey]);
 }
 
