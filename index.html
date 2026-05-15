@@ -217,12 +217,12 @@ body{font-family:'Microsoft JhengHei','微軟正黑體',Arial,sans-serif;backgro
   #main{top:108px;flex-direction:column}
   #ip{position:fixed;left:0;right:0;bottom:0;width:100%;min-width:0;height:60vh;border-left:none;border-top:3px solid var(--border);border-radius:18px 18px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.18);transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1),height .35s cubic-bezier(.4,0,.2,1);z-index:300;padding:16px 16px 90px;overflow-y:auto}
   #ip.mobile-open{transform:translateY(0)}
-  #ip.ip-fullscreen{height:calc(100vh - 108px)!important;border-radius:0!important;}
+  #ip.ip-fullscreen{height:calc(100vh - 130px)!important;border-radius:12px 12px 0 0!important;}
   /* 全螢幕時顯示縮回按鈕 */
   #ip-fs-btn{display:none}
   #ip.ip-fullscreen #ip-fs-btn{display:flex}
   #ip::before{content:'';display:block;width:40px;height:5px;background:var(--border);border-radius:3px;margin:0 auto 12px;cursor:pointer}
-  #ip-close-btn{display:flex;position:absolute;top:14px;right:14px;width:32px;height:32px;align-items:center;justify-content:center;background:var(--bg);border:1px solid var(--border);border-radius:50%;cursor:pointer;font-size:18px;color:var(--muted)}
+  #ip-close-btn{display:flex;position:absolute;top:14px;right:14px;width:34px;height:34px;align-items:center;justify-content:center;background:var(--bg);border:1.5px solid var(--border);border-radius:50%;cursor:pointer;font-size:18px;color:var(--muted);z-index:10;box-shadow:0 2px 6px rgba(0,0,0,.12)}
   /* zoom controls: right side, bottom of tree area */
   #ctrl{left:auto;right:12px;bottom:calc(60vh + 12px);transition:bottom .35s}
   body.panel-open #ctrl{display:none}
@@ -232,9 +232,12 @@ body{font-family:'Microsoft JhengHei','微軟正黑體',Arial,sans-serif;backgro
   body.panel-open #btn-row{display:none}
   .tr-btn{font-size:14px;padding:10px 14px}
   #legend{display:none}
-  /* sync dot & admin: move to TOP of screen (below header), no overlap with buttons */
+  /* sync dot: below header */
   #sync-dot{top:116px;bottom:auto;left:8px}
-  #admin-trigger{top:112px;bottom:auto;right:6px;font-size:12px}
+  /* 管理員: float into red header, first row right side */
+  #admin-trigger{position:fixed;top:8px;right:8px;z-index:210;font-size:12px;border-radius:10px;padding:5px 10px}
+  #admin-trigger.has-pending{color:#fff;font-weight:bold;background:rgba(255,180,60,.85);border:1.5px solid #ffd080}
+  #admin-trigger:not(.has-pending){color:rgba(255,255,255,.7);background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3)}
   body.panel-open #sync-dot{display:none!important}
   #dev-credit{display:none}
   .nname{font-size:14px}
