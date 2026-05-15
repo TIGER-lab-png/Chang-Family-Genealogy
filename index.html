@@ -49,7 +49,10 @@ body{font-family:'Microsoft JhengHei','微軟正黑體',Arial,sans-serif;backgro
 #tc{flex:1;overflow:hidden;position:relative}
 
 /* INFO PANEL */
-#ip{width:290px;min-width:290px;background:var(--panel);border-left:3px solid var(--border);padding:16px 15px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+
+#ip-resize{position:absolute;left:0;top:0;bottom:0;width:6px;cursor:col-resize;z-index:10;background:transparent;transition:background .2s}
+#ip-resize:hover,#ip-resize.dragging{background:var(--border)}
+#ip{width:290px;min-width:220px;max-width:600px;background:var(--panel);border-left:3px solid var(--border);padding:16px 15px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;position:relative}
 #ip h2{font-size:15px;color:var(--red);border-bottom:2px solid var(--border);padding-bottom:6px;font-weight:bold}
 .iname{font-size:24px;font-weight:bold;color:var(--text);margin:3px 0;line-height:1.3}
 .itag{display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:bold;margin-bottom:5px}
@@ -143,8 +146,8 @@ body{font-family:'Microsoft JhengHei','微軟正黑體',Arial,sans-serif;backgro
 
 
 /* PHOTO & DOCS */
-.person-photo{width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid var(--border);cursor:pointer;flex-shrink:0}
-.photo-placeholder{width:90px;height:90px;border-radius:50%;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:13px;text-align:center;flex-shrink:0;background:var(--bg);transition:background .2s}
+.person-photo{width:116px;height:116px;border-radius:50%;object-fit:cover;border:3px solid var(--border);cursor:pointer;flex-shrink:0}
+.photo-placeholder{width:116px;height:116px;border-radius:50%;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:13px;text-align:center;flex-shrink:0;background:var(--bg);transition:background .2s}
 .photo-placeholder:hover{background:#ece5d8}
 .person-header{display:flex;align-items:center;gap:12px;margin-bottom:6px}
 .person-header-text{flex:1;min-width:0}
@@ -188,7 +191,7 @@ body{font-family:'Microsoft JhengHei','微軟正黑體',Arial,sans-serif;backgro
 
 /* MOBILE adjustments for panel */
 @media(max-width:768px){
-  .person-photo,.photo-placeholder{width:72px;height:72px}
+  .person-photo,.photo-placeholder{width:90px;height:90px}
 }
 @media(min-width:769px){
   /* Desktop: info panel is sidebar */
@@ -206,19 +209,21 @@ body{font-family:'Microsoft JhengHei','微軟正黑體',Arial,sans-serif;backgro
   .hbtn{font-size:13px;padding:8px 11px}
   #help-btn-hdr{display:flex}
   #rb{display:none}
+  #add-open-btn{display:none}
   #mob-help-btn{display:none!important}
   #main{top:108px;flex-direction:column}
-  #ip{position:fixed;left:0;right:0;bottom:0;width:100%;min-width:0;height:60vh;border-left:none;border-top:3px solid var(--border);border-radius:18px 18px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.18);transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);z-index:300;padding:16px 16px 90px;overflow-y:auto}
+  #ip{position:fixed;left:0;right:0;bottom:0;width:100%;min-width:0;height:60vh;border-left:none;border-top:3px solid var(--border);border-radius:18px 18px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.18);transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1),height .35s cubic-bezier(.4,0,.2,1);z-index:300;padding:16px 16px 90px;overflow-y:auto}
   #ip.mobile-open{transform:translateY(0)}
-  #ip::before{content:'';display:block;width:40px;height:5px;background:var(--border);border-radius:3px;margin:0 auto 12px}
+  #ip.ip-fullscreen{height:100vh;border-radius:0;padding-top:20px}
+  #ip::before{content:'';display:block;width:40px;height:5px;background:var(--border);border-radius:3px;margin:0 auto 12px;cursor:pointer}
   #ip-close-btn{display:flex;position:absolute;top:14px;right:14px;width:32px;height:32px;align-items:center;justify-content:center;background:var(--bg);border:1px solid var(--border);border-radius:50%;cursor:pointer;font-size:18px;color:var(--muted)}
   /* zoom controls: right side, bottom of tree area */
   #ctrl{left:auto;right:12px;bottom:calc(60vh + 12px);transition:bottom .35s}
-  body.panel-open #ctrl{bottom:12px}
+  body.panel-open #ctrl{display:none}
   .cb{width:46px;height:46px;font-size:20px}
   /* action buttons: left side, bottom of tree area */
   #btn-row{left:12px;bottom:calc(60vh + 12px);flex-direction:column;gap:6px;transition:bottom .35s}
-  body.panel-open #btn-row{bottom:12px}
+  body.panel-open #btn-row{display:none}
   .tr-btn{font-size:14px;padding:10px 14px}
   #legend{display:none}
   /* sync dot & admin: move to TOP of screen (below header), no overlap with buttons */
@@ -281,6 +286,7 @@ body{font-family:'Microsoft JhengHei','微軟正黑體',Arial,sans-serif;backgro
 <div id="main">
   <div id="tc"><svg id="svg" style="width:100%;height:100%"></svg></div>
   <div id="ip">
+    <div id="ip-resize"></div>
     <button id="ip-close-btn" onclick="closeMobilePanel()">✕</button>
     <h2>📋 族人資料</h2>
     <div id="ic"><div class="emsg">請點選族譜圖中<br/>任一族人節點<br/>查看詳細資料</div></div>
@@ -451,6 +457,20 @@ body{font-family:'Microsoft JhengHei','微軟正黑體',Arial,sans-serif;backgro
 const DB='https://chang-family-genealogy-default-rtdb.asia-southeast1.firebasedatabase.app';
 async function dbGet(p){try{const r=await fetch(`${DB}/${p}.json`);const d=await r.json();return(d&&d.error)?null:d;}catch{return null;}}
 async function dbPush(p,data){try{const r=await fetch(`${DB}/${p}.json`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});return(await r.json()).name;}catch{return null;}}
+async function dbSetWithTimeout(p,data,ms=15000){
+  try{
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),ms);
+    let r;
+    try{
+      r=await fetch(`${DB}/${encodeURIComponent(p).replace(/%2F/g,'/')}.json`,
+        {method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data),signal:ctrl.signal});
+    }finally{clearTimeout(tid);}
+    const result=await r.json();
+    if(result&&result.error)console.error('dbSet error:',result.error);
+    return result;
+  }catch(e){console.error('dbSetWithTimeout failed:',e);}
+}
 async function dbSet(p,data){
   try{
     const r=await fetch(`${DB}/${encodeURIComponent(p).replace(/%2F/g,'/')}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
@@ -798,24 +818,34 @@ async function saveIntro(pKey){
 function renderHistory(pKey){
   const ct=personContacts[pKey]||{};
   const histText=(ct.histText||'').trim();
-  const histImg=ct.histImg||null;
+  // 支援多張：histImgs 陣列；舊版單張 histImg 自動轉入
+  // Firebase 不支援原生陣列，讀回來可能是 {0:url,1:url} 物件，需轉回陣列
+  const _hi=ct.histImgs;
+  let histImgs=_hi
+    ?(Array.isArray(_hi)?_hi:Object.values(_hi))
+    :(ct.histImg?[ct.histImg]:[]);
   const safeKey=pKey.replace(/[^a-z0-9]/gi,'_');
   const bodyHtml=histText
     ?`<div class="hist-body" id="hist-body-${safeKey}">${histText.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`
     :`<div class="hist-body empty" id="hist-body-${safeKey}">尚無歷史簡介，點擊「✏ 編輯」填寫</div>`;
-  const imgHtml=histImg
-    ?`<img class="hist-img" src="${histImg}" onclick="openLightbox('${histImg}','歷史照片')" title="點擊放大"/>`
-    :'';
+  const imgsHtml=histImgs.length===0?'':
+    `<div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">`+
+    histImgs.map((url,i)=>
+      `<div style="position:relative">
+        <img class="hist-img" src="${url}" onclick="openLightbox('${url}','歷史照片')" title="點擊放大" style="cursor:pointer"/>
+        <button onclick="deleteHistoryImg('${pKey}',${i})" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer">🗑 刪除</button>
+      </div>`
+    ).join('')+`</div>`;
   return `<div class="hist-section">
     <div class="hist-title">
       <span>📜 歷史簡介</span>
       <div style="display:flex;gap:6px">
-        <button class="hist-img-upload" onclick="uploadHistoryImg('${pKey}')">🖼 ${histImg?'更換圖片':'上傳圖片'}</button>
+        <button class="hist-img-upload" onclick="uploadHistoryImg('${pKey}')">🖼 新增圖片</button>
         <button class="contact-edit-btn" onclick="openHistoryEdit('${pKey}')">✏ 編輯</button>
       </div>
     </div>
     ${bodyHtml}
-    ${imgHtml}
+    ${imgsHtml}
     <div class="hist-edit-area" id="hist-edit-${safeKey}">
       <textarea id="hist-ta-${safeKey}" placeholder="記錄這位族人的歷史背景、生平事蹟、家族故事…&#10;（支援換行，無字數限制）">${histText.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
       <div class="contact-inline-btns">
@@ -848,6 +878,17 @@ async function saveHistory(pKey){
   closeHistoryEdit(pKey);
   await dbSet('contacts/'+pKey,personContacts[pKey]);
 }
+async function deleteHistoryImg(pKey,idx){
+  if(!personContacts[pKey])return;
+  // Firebase 陣列轉換
+  const _cur=personContacts[pKey].histImgs;
+  let imgs=_cur?(Array.isArray(_cur)?[..._cur]:Object.values(_cur)):[];
+  imgs.splice(idx,1);
+  personContacts[pKey].histImgs=imgs;
+  if(selNode)selectNode(selNode);
+  await dbSetWithTimeout('contacts/'+pKey+'/histImgs',imgs,15000);
+  await loadAll();if(selNode)selectNode(selNode);
+}
 async function uploadHistoryImg(pKey){
   const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.style.display='none';
   inp.onchange=async()=>{
@@ -860,11 +901,21 @@ async function uploadHistoryImg(pKey){
       const path=`history/${safeKey}/${Date.now()}.jpg`;
       const url=await uploadToStorage(path,compressed);
       if(!personContacts[pKey])personContacts[pKey]={};
-      personContacts[pKey].histImg=url;
-      showUploadMsg('儲存中…',pKey);
-      await dbSet('contacts/'+pKey,personContacts[pKey]);
-      showUploadMsg('',pKey);
+      // Firebase 陣列轉換：物件 {0:url} → 真正的陣列
+      const _cur=personContacts[pKey].histImgs;
+      let _imgs=_cur
+        ?(Array.isArray(_cur)?[..._cur]:Object.values(_cur))
+        :(personContacts[pKey].histImg?[personContacts[pKey].histImg]:[]);
+      delete personContacts[pKey].histImg;
+      _imgs.push(url);
+      personContacts[pKey].histImgs=_imgs;
+      // 先立即更新畫面
       if(selNode)selectNode(selNode);
+      showUploadMsg('儲存連結中…',pKey);
+      // 只存 histImgs 子路徑（比存整個 contacts 快很多）
+      await dbSetWithTimeout('contacts/'+pKey+'/histImgs',_imgs,15000);
+      showUploadMsg('',pKey);
+      await loadAll();if(selNode)selectNode(selNode);
     }catch(e){showUploadMsg('❌ 失敗：'+e.message,pKey);console.error(e);}
     finally{try{document.body.removeChild(inp);}catch{}}
   };
@@ -1074,6 +1125,75 @@ async function submitReport(){
 }
 
 // ── INIT & EVENTS ──
+
+// ── MOBILE SWIPE UP/DOWN on info panel ──
+(function(){
+  const ip=document.getElementById('ip');
+  let startY=0,startH=0,isDragging=false;
+  const FULL='ip-fullscreen';
+
+  ip.addEventListener('touchstart',e=>{
+    // Only trigger from top ~60px (drag handle area)
+    const touch=e.touches[0];
+    const rect=ip.getBoundingClientRect();
+    if(touch.clientY-rect.top>60)return;
+    startY=touch.clientY;
+    startH=ip.offsetHeight;
+    isDragging=true;
+  },{passive:true});
+
+  ip.addEventListener('touchmove',e=>{
+    if(!isDragging)return;
+    e.preventDefault();
+  },{passive:false});
+
+  ip.addEventListener('touchend',e=>{
+    if(!isDragging)return;
+    isDragging=false;
+    const endY=e.changedTouches[0].clientY;
+    const dy=startY-endY; // positive = swipe up
+    if(dy>40){
+      // swipe up → fullscreen
+      ip.classList.add(FULL);
+    } else if(dy<-40){
+      if(ip.classList.contains(FULL)){
+        // swipe down from fullscreen → normal
+        ip.classList.remove(FULL);
+      } else {
+        // swipe down from normal → close
+        closeMobilePanel();
+      }
+    }
+  },{passive:true});
+})();
+
+// ── DESKTOP DRAG TO RESIZE info panel ──
+(function(){
+  const handle=document.getElementById('ip-resize');
+  const ip=document.getElementById('ip');
+  if(!handle||!ip)return;
+  let dragging=false,startX=0,startW=0;
+  handle.addEventListener('mousedown',e=>{
+    if(window.innerWidth<=768)return;
+    dragging=true;startX=e.clientX;startW=ip.offsetWidth;
+    handle.classList.add('dragging');
+    document.body.style.userSelect='none';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove',e=>{
+    if(!dragging)return;
+    const dx=startX-e.clientX; // drag left = wider
+    const newW=Math.min(600,Math.max(220,startW+dx));
+    ip.style.width=newW+'px';
+  });
+  document.addEventListener('mouseup',()=>{
+    if(!dragging)return;
+    dragging=false;
+    handle.classList.remove('dragging');
+    document.body.style.userSelect='';
+  });
+})();
+
 document.addEventListener('DOMContentLoaded',async()=>{
   // Loading overlay
   hideLoading();setTimeout(hideLoading,8000);
