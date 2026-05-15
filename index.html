@@ -148,16 +148,7 @@ body{font-family:'Microsoft JhengHei','微軟正黑體',Arial,sans-serif;backgro
 .photo-placeholder:hover{background:#ece5d8}
 .person-header{display:flex;align-items:center;gap:12px;margin-bottom:6px}
 .person-header-text{flex:1;min-width:0}
-.docs-section{margin-top:6px;border-top:1px solid #eee;padding-top:8px}
-.docs-title{font-size:13px;font-weight:bold;color:var(--muted);display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;padding:4px 0}
-.docs-title:hover{color:var(--text)}
-.docs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-top:8px}
-.doc-thumb{position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;cursor:pointer}
-.doc-thumb img{width:100%;height:100%;object-fit:cover}
-.doc-thumb .doc-cap{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);color:#fff;font-size:9px;padding:2px 4px;text-overflow:ellipsis;white-space:nowrap;overflow:hidden}
-.doc-upload-btn{display:flex;align-items:center;justify-content:center;gap:4px;padding:7px 12px;border-radius:8px;border:2px dashed var(--border);background:var(--bg);cursor:pointer;font-size:12px;color:var(--muted);width:100%;margin-top:6px;font-family:inherit}
-.doc-upload-btn:hover{background:#ece5d8;color:var(--text)}
-.docs-collapsed .docs-grid,.docs-collapsed .doc-upload-btn{display:none}
+
 /* LIGHTBOX */
 #lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:800;align-items:center;justify-content:center;flex-direction:column;gap:12px}
 #lightbox.show{display:flex}
@@ -198,12 +189,10 @@ body{font-family:'Microsoft JhengHei','微軟正黑體',Arial,sans-serif;backgro
 /* MOBILE adjustments for panel */
 @media(max-width:768px){
   .person-photo,.photo-placeholder{width:72px;height:72px}
-  .docs-grid{grid-template-columns:repeat(auto-fill,minmax(70px,1fr))}
 }
 @media(min-width:769px){
   /* Desktop: info panel is sidebar */
   #ip{display:flex;flex-direction:column}
-  .docs-section{overflow-y:auto}
 }
 
 /* MOBILE */
@@ -215,7 +204,9 @@ body{font-family:'Microsoft JhengHei','微軟正黑體',Arial,sans-serif;backgro
   #hdr-search{margin-left:0;width:100%;order:2;gap:5px}
   #hdr-search input{flex:1;width:0;min-width:0;font-size:16px;padding:9px 12px}
   .hbtn{font-size:13px;padding:8px 11px}
-  #help-btn-hdr{display:none}
+  #help-btn-hdr{display:flex}
+  #rb{display:none}
+  #mob-help-btn{display:none!important}
   #main{top:108px;flex-direction:column}
   #ip{position:fixed;left:0;right:0;bottom:0;width:100%;min-width:0;height:60vh;border-left:none;border-top:3px solid var(--border);border-radius:18px 18px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.18);transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);z-index:300;padding:16px 16px 90px;overflow-y:auto}
   #ip.mobile-open{transform:translateY(0)}
@@ -247,6 +238,21 @@ body{font-family:'Microsoft JhengHei','微軟正黑體',Arial,sans-serif;backgro
   #ip-close-btn{display:none}
   #mob-help-btn{display:none}
 }
+
+/* HIST SECTION */
+.hist-section{margin-top:6px;border-top:1px solid #eee;padding-top:8px}
+.hist-title{font-size:13px;font-weight:bold;color:var(--muted);padding:4px 0 8px;display:flex;align-items:center;justify-content:space-between}
+.hist-body{font-size:14px;color:var(--text);line-height:1.75;white-space:pre-wrap;word-break:break-word;background:#faf7f2;border-radius:10px;padding:10px 12px;min-height:50px}
+.hist-body.empty{color:#ccc;font-style:italic;font-size:13px;min-height:44px;display:flex;align-items:center}
+.hist-edit-area{display:none;flex-direction:column;gap:6px;margin-top:6px}
+.hist-edit-area.open{display:flex}
+.hist-edit-area textarea{padding:10px 12px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;outline:none;resize:vertical;min-height:100px;line-height:1.7}
+.hist-edit-area textarea:focus{border-color:var(--red)}
+.hist-img{width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px;cursor:pointer;border:1px solid var(--border)}
+.hist-img-row{display:flex;align-items:center;gap:8px;margin-top:8px}
+.hist-img-upload{padding:5px 12px;border-radius:8px;border:2px dashed var(--border);background:var(--bg);cursor:pointer;font-size:12px;color:var(--muted);font-family:inherit}
+.hist-img-upload:hover{background:#ece5d8;color:var(--text)}
+
 </style>
 </head>
 <body>
@@ -476,12 +482,12 @@ function deepClone(o){return JSON.parse(JSON.stringify(o));}
 function personKey(name,gen){return `${gen}_${name.replace(/\s/g,'')}` ;}
 
 // ── LOAD ──
-let personPhotos={};let personDocs={};let personContacts={};
+let personPhotos={};let personContacts={};
 async function loadAll(){
   try{
-    const [p,a,pe,ae,ph,doc,ct]=await Promise.all([dbGet('pending'),dbGet('approved'),dbGet('pendingEdits'),dbGet('approvedEdits'),dbGet('photos'),dbGet('docs'),dbGet('contacts')]);
+    const [p,a,pe,ae,ph,ct]=await Promise.all([dbGet('pending'),dbGet('approved'),dbGet('pendingEdits'),dbGet('approvedEdits'),dbGet('photos'),dbGet('contacts')]);
     pending=fbArr(p);approved=fbArr(a);pendingEdits=fbArr(pe);approvedEdits=fbArr(ae);
-    personPhotos=ph||{};personDocs=doc||{};personContacts=ct||{};
+    personPhotos=ph||{};personContacts=ct||{};
     setSyncStatus('ok');
   }catch{setSyncStatus('err');}
 }
@@ -611,28 +617,9 @@ function openLightbox(src,cap){
   document.getElementById('lightbox-cap').textContent=cap||'';
   document.getElementById('lightbox').classList.add('show');
 }
-function renderDocs(pKey,p){
-  const docs=personDocs[pKey]||[];
-  const photo=personPhotos[pKey]||null;
-  const safeKey=pKey.replace(/[^a-z0-9]/gi,'_');
-  const photoEl=photo
-    ?`<div style="position:relative;flex-shrink:0">
-        <img class="person-photo" src="${photo}" onclick="openLightbox('${photo}','張 ${p?p.name:''} 照片')"/>
-        <div onclick="uploadPhoto('${pKey}')" style="position:absolute;bottom:-2px;right:-2px;width:20px;height:20px;border-radius:50%;background:var(--gold);border:2px solid #fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px" title="更換照片">✏️</div>
-      </div>`
-    :`<div class="photo-placeholder" onclick="uploadPhoto('${pKey}')">📷<br>新增<br>照片</div>`;
-  return {photoEl, docsHtml: docs.length===0?'':
-    `<div class="docs-grid">${docs.map((d,i)=>
-      `<div class="doc-thumb" onclick="openLightbox('${d.url}','${(d.cap||'').replace(/'/g,"\'")}')">
-        <img src="${d.url}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2290%22 height=%2290%22><rect fill=%22%23eee%22 width=%2290%22 height=%2290%22/><text x=%2245%22 y=%2250%22 text-anchor=%22middle%22 fill=%22%23aaa%22 font-size=%2212%22>圖片</text></svg>'"/>
-        ${d.cap?`<div class="doc-cap">${d.cap}</div>`:''}
-      </div>`).join('')}</div>`
-  };
-}
 // ── FIREBASE STORAGE ──
 const STORAGE='https://firebasestorage.googleapis.com/v0/b/chang-family-genealogy.firebasestorage.app/o';
 
-// 前端壓縮：自動縮到 1200px 以內、JPEG 品質迭代到 < 200KB
 async function compressImage(file,maxKB=200){
   return new Promise(resolve=>{
     const img=new Image();
@@ -649,83 +636,49 @@ async function compressImage(file,maxKB=200){
     img.src=URL.createObjectURL(file);
   });
 }
-
-// 顯示上傳進度提示
 function showUploadMsg(msg,pKey){
   const el=document.getElementById('upload-status-'+pKey.replace(/[^a-z0-9]/gi,'_'));
   if(el){el.textContent=msg;el.style.display=msg?'block':'none';}
 }
-
-async function uploadToStorage(path,dataUrl,onProgress){
-  // dataUrl → Blob
+async function uploadToStorage(path,dataUrl){
   const res=await fetch(dataUrl);const blob=await res.blob();
   const encodedPath=encodeURIComponent(path);
-  const r=await fetch(`${STORAGE}?name=${encodedPath}`,{method:'POST',headers:{'Content-Type':blob.type||'image/jpeg'},body:blob});
+  const ctrl=new AbortController();
+  const tid=setTimeout(()=>ctrl.abort(),30000);
+  let r;
+  try{
+    r=await fetch(`${STORAGE}?name=${encodedPath}`,{method:'POST',headers:{'Content-Type':blob.type||'image/jpeg'},body:blob,signal:ctrl.signal});
+  }finally{clearTimeout(tid);}
   const data=await r.json();
-  if(data.error)throw new Error(data.error.message);
+  if(data.error)throw new Error('Storage 錯誤：'+data.error.message);
   return `${STORAGE}/${encodedPath}?alt=media&token=${data.downloadTokens}`;
 }
 
+
+
+// ── PHOTO UPLOAD ──
 async function uploadPhoto(pKey){
-  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.style.display='none';
   inp.onchange=async()=>{
     const file=inp.files[0];if(!file)return;
     const safeKey=pKey.replace(/[^a-z0-9]/gi,'_');
     showUploadMsg('壓縮中…',pKey);
     try{
-      showUploadMsg('壓縮中…',pKey);
       const compressed=await compressImage(file,200);
       showUploadMsg('上傳至 Storage…',pKey);
       const path=`photos/${safeKey}/${Date.now()}.jpg`;
       const url=await uploadToStorage(path,compressed);
-      // 立即更新記憶體，先顯示照片
       personPhotos[pKey]=url;
       if(selNode)selectNode(selNode);
       showUploadMsg('儲存連結中…',pKey);
-      const r=await dbSet('photos/'+pKey,url);
-      console.log('Photo saved to DB:',pKey,'->',url.substring(0,60));
+      await dbSet('photos/'+pKey,url);
       showUploadMsg('',pKey);
       await loadAll();if(selNode)selectNode(selNode);
     }catch(e){showUploadMsg('❌ 失敗：'+e.message,pKey);console.error(e);}
+    finally{try{document.body.removeChild(inp);}catch{}}
   };
-  inp.click();
+  document.body.appendChild(inp);inp.click();
 }
-
-async function addDoc(pKey){
-  const url=prompt('請輸入圖片網址：','');
-  if(!url)return;
-  const cap=prompt('圖片說明（選填）：','')||'';
-  const docs=personDocs[pKey]||[];
-  docs.push({url,cap,addedAt:new Date().toLocaleString('zh-TW')});
-  await dbSet('docs/'+pKey,docs);
-  await loadAll();if(selNode)selectNode(selNode);
-}
-
-async function uploadDoc(pKey){
-  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.multiple=true;
-  inp.onchange=async()=>{
-    const files=[...inp.files];if(!files.length)return;
-    const safeKey=pKey.replace(/[^a-z0-9]/gi,'_');
-    showUploadMsg(`壓縮並上傳中（0/${files.length}）…`,pKey);
-    try{
-      for(let i=0;i<files.length;i++){
-        showUploadMsg(`壓縮並上傳中（${i+1}/${files.length}）…`,pKey);
-        const compressed=await compressImage(files[i],200);
-        const path=`docs/${safeKey}/${Date.now()}_${i}.jpg`;
-        const url=await uploadToStorage(path,compressed);
-        const cap=files[i].name.replace(/\.[^.]+$/,'');
-        const docs=personDocs[pKey]||[];
-        docs.push({url,cap,addedAt:new Date().toLocaleString('zh-TW')});
-        personDocs[pKey]=docs;
-        await dbSet('docs/'+pKey,docs);
-      }
-      showUploadMsg('',pKey);
-      await loadAll();if(selNode)selectNode(selNode);
-    }catch(e){showUploadMsg('上傳失敗：'+e.message,pKey);console.error(e);}
-  };
-  inp.click();
-}
-function toggleDocs(sec){sec.classList.toggle('docs-collapsed');}
 
 // ── 個人聯絡資訊（自動更新，無需審核）──
 const CONTACT_FIELDS=[
@@ -742,10 +695,10 @@ function renderContacts(pKey){
     const val=(ct[f.key]||'').trim();
     const safeId='ct-'+pKey.replace(/[^a-z0-9]/gi,'_')+'-'+f.key;
     const displayVal=val
-      ? (f.type==='url'||f.type==='email'
-          ? `<a href="${f.type==='email'?'mailto:'+val:val}" target="_blank">${val}</a>`
-          : val)
-      : `<span class="empty">未填寫</span>`;
+      ?(f.type==='url'||f.type==='email'
+          ?`<a href="${f.type==='email'?'mailto:'+val:val}" target="_blank">${val}</a>`
+          :val)
+      :`<span class="empty">未填寫</span>`;
     return `<div class="contact-field" id="cfield-${safeId}">
       <span class="contact-label">${f.icon} ${f.label}</span>
       <span class="contact-value" id="cv-${safeId}">${displayVal}</span>
@@ -760,12 +713,11 @@ function renderContacts(pKey){
     </div>`;
   }).join('');
   return `<div class="contact-section">
-    <div class="contact-title">📇 個人聯絡資訊 <span style="font-size:11px;color:#bbb;font-weight:normal">（自行填寫，即時更新）</span></div>
+    <div class="contact-title">📇 個人聯絡資訊</div>
     ${renderIntro(pKey)}
     ${rows}
   </div>`;
 }
-
 function openContactEdit(pKey,field){
   const safeId='ct-'+pKey.replace(/[^a-z0-9]/gi,'_')+'-'+field;
   const ci=document.getElementById('ci-'+safeId);
@@ -777,23 +729,20 @@ function closeContactEdit(pKey,field){
 }
 async function saveContact(pKey,field){
   const safeId='ct-'+pKey.replace(/[^a-z0-9]/gi,'_')+'-'+field;
-  const inp=document.getElementById('cinp-'+safeId);
-  if(!inp)return;
+  const inp=document.getElementById('cinp-'+safeId);if(!inp)return;
   const val=inp.value.trim();
   if(!personContacts[pKey])personContacts[pKey]={};
   personContacts[pKey][field]=val;
-  // 立即更新顯示
   const f=CONTACT_FIELDS.find(x=>x.key===field);
   const cvEl=document.getElementById('cv-'+safeId);
   if(cvEl){
     cvEl.innerHTML=val
-      ? (f&&(f.type==='url'||f.type==='email')
-          ? `<a href="${f.type==='email'?'mailto:'+val:val}" target="_blank">${val}</a>`
-          : val)
-      : '<span class="empty">未填寫</span>';
+      ?(f&&(f.type==='url'||f.type==='email')
+          ?`<a href="${f.type==='email'?'mailto:'+val:val}" target="_blank">${val}</a>`
+          :val)
+      :'<span class="empty">未填寫</span>';
   }
   closeContactEdit(pKey,field);
-  // 寫入 Firebase（無需審核）
   await dbSet('contacts/'+pKey,personContacts[pKey]);
 }
 
@@ -821,7 +770,6 @@ function renderIntro(pKey){
     </div>
   </div>`;
 }
-
 function openIntroEdit(pKey){
   const safeKey=pKey.replace(/[^a-z0-9]/gi,'_');
   const el=document.getElementById('intro-edit-'+safeKey);
@@ -833,272 +781,405 @@ function closeIntroEdit(pKey){
 }
 async function saveIntro(pKey){
   const safeKey=pKey.replace(/[^a-z0-9]/gi,'_');
-  const ta=document.getElementById('intro-ta-'+safeKey);
-  if(!ta)return;
+  const ta=document.getElementById('intro-ta-'+safeKey);if(!ta)return;
   const val=ta.value.trim();
   if(!personContacts[pKey])personContacts[pKey]={};
   personContacts[pKey].intro=val;
-  // 立即更新顯示
   const bodyEl=document.getElementById('intro-body-'+safeKey);
   if(bodyEl){
-    if(val){
-      bodyEl.className='intro-body';
-      bodyEl.innerHTML=val.replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }else{
-      bodyEl.className='intro-body empty';
-      bodyEl.innerHTML='尚無簡介，點擊「✏ 編輯」填寫';
-    }
+    if(val){bodyEl.className='intro-body';bodyEl.innerHTML=val.replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+    else{bodyEl.className='intro-body empty';bodyEl.innerHTML='尚無簡介，點擊「✏ 編輯」填寫';}
   }
   closeIntroEdit(pKey);
   await dbSet('contacts/'+pKey,personContacts[pKey]);
 }
 
+// ── 歷史簡介 ──
+function renderHistory(pKey){
+  const ct=personContacts[pKey]||{};
+  const histText=(ct.histText||'').trim();
+  const histImg=ct.histImg||null;
+  const safeKey=pKey.replace(/[^a-z0-9]/gi,'_');
+  const bodyHtml=histText
+    ?`<div class="hist-body" id="hist-body-${safeKey}">${histText.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`
+    :`<div class="hist-body empty" id="hist-body-${safeKey}">尚無歷史簡介，點擊「✏ 編輯」填寫</div>`;
+  const imgHtml=histImg
+    ?`<img class="hist-img" src="${histImg}" onclick="openLightbox('${histImg}','歷史照片')" title="點擊放大"/>`
+    :'';
+  return `<div class="hist-section">
+    <div class="hist-title">
+      <span>📜 歷史簡介</span>
+      <div style="display:flex;gap:6px">
+        <button class="hist-img-upload" onclick="uploadHistoryImg('${pKey}')">🖼 ${histImg?'更換圖片':'上傳圖片'}</button>
+        <button class="contact-edit-btn" onclick="openHistoryEdit('${pKey}')">✏ 編輯</button>
+      </div>
+    </div>
+    ${bodyHtml}
+    ${imgHtml}
+    <div class="hist-edit-area" id="hist-edit-${safeKey}">
+      <textarea id="hist-ta-${safeKey}" placeholder="記錄這位族人的歷史背景、生平事蹟、家族故事…&#10;（支援換行，無字數限制）">${histText.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+      <div class="contact-inline-btns">
+        <button class="ci-ok" onclick="saveHistory('${pKey}')">儲存</button>
+        <button class="ci-cancel" onclick="closeHistoryEdit('${pKey}')">取消</button>
+      </div>
+    </div>
+  </div>`;
+}
+function openHistoryEdit(pKey){
+  const safeKey=pKey.replace(/[^a-z0-9]/gi,'_');
+  const el=document.getElementById('hist-edit-'+safeKey);
+  if(el){el.classList.add('open');const ta=document.getElementById('hist-ta-'+safeKey);if(ta)ta.focus();}
+}
+function closeHistoryEdit(pKey){
+  const safeKey=pKey.replace(/[^a-z0-9]/gi,'_');
+  const el=document.getElementById('hist-edit-'+safeKey);if(el)el.classList.remove('open');
+}
+async function saveHistory(pKey){
+  const safeKey=pKey.replace(/[^a-z0-9]/gi,'_');
+  const ta=document.getElementById('hist-ta-'+safeKey);if(!ta)return;
+  const val=ta.value.trim();
+  if(!personContacts[pKey])personContacts[pKey]={};
+  personContacts[pKey].histText=val;
+  const bodyEl=document.getElementById('hist-body-'+safeKey);
+  if(bodyEl){
+    if(val){bodyEl.className='hist-body';bodyEl.innerHTML=val.replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+    else{bodyEl.className='hist-body empty';bodyEl.innerHTML='尚無歷史簡介，點擊「✏ 編輯」填寫';}
+  }
+  closeHistoryEdit(pKey);
+  await dbSet('contacts/'+pKey,personContacts[pKey]);
+}
+async function uploadHistoryImg(pKey){
+  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.style.display='none';
+  inp.onchange=async()=>{
+    const file=inp.files[0];if(!file)return;
+    const safeKey=pKey.replace(/[^a-z0-9]/gi,'_');
+    showUploadMsg('壓縮中…',pKey);
+    try{
+      const compressed=await compressImage(file,200);
+      showUploadMsg('上傳至 Storage…',pKey);
+      const path=`history/${safeKey}/${Date.now()}.jpg`;
+      const url=await uploadToStorage(path,compressed);
+      if(!personContacts[pKey])personContacts[pKey]={};
+      personContacts[pKey].histImg=url;
+      showUploadMsg('儲存中…',pKey);
+      await dbSet('contacts/'+pKey,personContacts[pKey]);
+      showUploadMsg('',pKey);
+      if(selNode)selectNode(selNode);
+    }catch(e){showUploadMsg('❌ 失敗：'+e.message,pKey);console.error(e);}
+    finally{try{document.body.removeChild(inp);}catch{}}
+  };
+  document.body.appendChild(inp);inp.click();
+}
+
+// ── SELECT NODE ──
 function selectNode(d){
-  selNode=d;update(d);
-  const p=d.data,pKey=personKey(p.name,p.gen);
-  const kids=(d.children||d._children||[]);
-  const sons=kids.filter(c=>!c.data.is_daughter).length,daus=kids.filter(c=>c.data.is_daughter).length;
-  const clp=d._children?`（尚有 ${cntDesc(d)} 位子孫）`:'';
-  const gender=d.depth===0?'root':p.is_daughter?'dau':'son';
-  const spouseVal=getApprovedEditVal(pKey,'spouse')||p.spouse||'';
-  const bdVal=getApprovedEditVal(pKey,'bd')||p.bd||'';
-  const {photoEl,docsHtml}=renderDocs(pKey,p);
-  const docs=personDocs[pKey]||[];
+  selNode=d;
+  d3.selectAll('.node').classed('sel',n=>n===d);
+  const data=d.data;
+  const pKey=personKey(data.name,data.gen);
+  const safeKey=pKey.replace(/[^a-z0-9]/gi,'_');
+  const photo=personPhotos[pKey]||null;
+  const photoEl=photo
+    ?`<div style="position:relative;flex-shrink:0">
+        <img class="person-photo" src="${photo}" onclick="openLightbox('${photo}','${data.name} 照片')"/>
+        <div onclick="uploadPhoto('${pKey}')" style="position:absolute;bottom:-2px;right:-2px;width:20px;height:20px;border-radius:50%;background:var(--gold);border:2px solid #fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px" title="更換照片">✏️</div>
+      </div>`
+    :`<div class="photo-placeholder" onclick="uploadPhoto('${pKey}')">📷<br>新增<br>照片</div>`;
+  const tag=d.depth===0?'root-tag':data.is_daughter?'dau':'son';
+  const tagLabel=d.depth===0?'始祖':data.is_daughter?'女兒':'男丁';
+  const children=[...(data.children||[]),...(data._children||[])];
   document.getElementById('ic').innerHTML=`
     <div class="person-header">
       ${photoEl}
       <div class="person-header-text">
-        <div class="iname">${p.name}${p.is_pending?'<span style="font-size:12px;color:var(--pending);font-weight:normal">（審核中）</span>':''}</div>
-        <span class="itag ${gender==='root'?'root-tag':gender}">${d.depth===0?'始祖':p.is_daughter?'♀ 女':'♂ 男'}</span>
+        <div class="iname">${data.name}</div>
+        <span class="itag ${tag}">${tagLabel}</span>
       </div>
     </div>
-    <div class="irow"><div class="irow-top"><span class="ilb">🏷 世代</span><span class="ival">第 ${p.gen} 世</span></div></div>
-    ${makeEditableRow('配偶','💑','spouse',spouseVal,pKey)}
-    ${makeEditableRow('生卒年','📅','bd',bdVal,pKey)}
-    <div class="irow"><div class="irow-top"><span class="ilb">👨‍👩‍👧‍👦 子女</span><span class="ival">${kids.length>0?`共 ${kids.length} 人（男 ${sons}、女 ${daus}）${clp}`:'（無記載）'}</span></div></div>
-    ${p.is_new?'<div style="padding:6px 10px;background:#d4edda;border-radius:8px;font-size:13px;color:#155724">✅ 已核准新增</div>':''}
-    ${p.is_pending?'<div style="padding:6px 10px;background:#fff3cd;border-radius:8px;font-size:13px;color:#856404">⏳ 等待管理員審核</div>':''}
-    <div class="docs-section${docs.length>3?' docs-collapsed':''}">
-      <div class="docs-title" onclick="toggleDocs(this.parentElement)">
-        <span>📂 歷史資料 ${docs.length>0?`（${docs.length} 張）`:''}</span>
-        <span style="font-size:11px;color:var(--muted)">${docs.length>3?'▶ 展開':docs.length>0?'▼ 收合':''}</span>
-      </div>
-      ${docsHtml}
-      <div id="upload-status-${pKey.replace(/[^a-z0-9]/gi,'_')}" style="display:none;font-size:12px;color:var(--pending);padding:4px 0;text-align:center"></div>
-      <button class="doc-upload-btn" onclick="uploadDoc('${pKey}')">📤 上傳照片 / 史料（自動壓縮）</button>
-      <button class="doc-upload-btn" onclick="addDoc('${pKey}')" style="margin-top:4px">🔗 貼上圖片網址</button>
-    </div>
+    <div id="upload-status-${safeKey}" style="display:none;font-size:12px;color:var(--muted);padding:4px 0;text-align:center"></div>
+    ${makeEditableRow('世代','🏮','gen',data.gen?`第${data.gen}世`:'',pKey)}
+    ${makeEditableRow('配偶','💑','spouse',data.spouse||'',pKey)}
+    ${makeEditableRow('生卒年','📅','bd',data.bd||'',pKey)}
+    ${makeEditableRow('子女','👶','children',children.map(c=>c.name).join('、')||'',pKey)}
+    ${renderHistory(pKey)}
     ${renderContacts(pKey)}
   `;
   document.getElementById('apply-btn').style.display='block';
   document.getElementById('report-btn').style.display='block';
-  document.getElementById('apply-btn').onclick=()=>{
-    document.getElementById('f-parent').value=p.name;
-    document.getElementById('f-gen').value=p.gen+1;
-    document.getElementById('add-ok').style.display='none';
-    document.getElementById('add-err').style.display='none';
-    document.getElementById('add-overlay').classList.add('show');
-  };
-  document.getElementById('report-btn').onclick=()=>{
-    reportTarget=p;
-    document.getElementById('report-target-info').textContent=`通報對象：第${p.gen}世　${p.name}`;
-    ['report-ok','report-err'].forEach(id=>document.getElementById(id).style.display='none');
-    ['r-correct','r-note','r-submitter'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('report-overlay').classList.add('show');
-  };
-  if(window.innerWidth<=768){openMobilePanel();}
+  if(window.innerWidth<=768){
+    document.getElementById('ip').classList.add('mobile-open');
+    document.body.classList.add('panel-open');
+  }
+}
+function closeMobilePanel(){
+  document.getElementById('ip').classList.remove('mobile-open');
+  document.body.classList.remove('panel-open');
 }
 
-// ── MOBILE ──
-function isMobile(){return window.innerWidth<=768;}
-function openMobilePanel(){document.getElementById('ip').classList.add('mobile-open');document.body.classList.add('panel-open');}
-function closeMobilePanel(){document.getElementById('ip').classList.remove('mobile-open');document.body.classList.remove('panel-open');}
-
-// ── SEARCH ──
+// ── FUZZY SEARCH ──
+function fuzzyMatchNode(d,q){
+  const name=d.data.name||'';
+  if(name.includes(q)||q.includes(name))return true;
+  const pKey=personKey(name,d.data.gen);
+  const ct=personContacts[pKey]||{};
+  const ctText=Object.values(ct).join(' ');
+  if(ctText.includes(q))return true;
+  return false;
+}
 function doSearch(){
   const q=document.getElementById('si').value.trim();
-  if(!q)return;
-  g.selectAll('.node').classed('found',false);
-  const found=findAllNodes(root).filter(d=>d.data.name.includes(q));
-  if(!found.length){alert(`找不到「${q}」`);return;}
-  const first=found[0];
-  let a=first.parent;while(a){if(a._children){a.children=a._children;a._children=null;}a=a.parent;}
+  if(!q){d3.selectAll('.node').classed('found',false);return;}
+  d3.selectAll('.node').classed('found',false);
+  const allNodes=findAllNodes(root);
+  const matches=allNodes.filter(d=>fuzzyMatchNode(d,q));
+  if(!matches.length)return;
+  // expand paths to matches
+  matches.forEach(target=>{
+    let node=target;
+    while(node.parent){
+      if(node.parent._children){node.parent.children=node.parent._children;node.parent._children=null;}
+      node=node.parent;
+    }
+  });
   update(root);
-  setTimeout(()=>{
-    g.selectAll('.node').filter(d=>d.data.name.includes(q)).classed('found',true);
-    const el=document.getElementById('svg'),sc=1.6;
-    svg.transition().duration(600).call(zoom.transform,d3.zoomIdentity.translate(el.clientWidth/2-first.y*sc,el.clientHeight/2-first.x*sc).scale(sc));
-    selectNode(first);
-  },300);
+  d3.selectAll('.node').classed('found',d=>matches.includes(d));
+  const first=matches[0];
+  const w=document.getElementById('svg').clientWidth||window.innerWidth-290;
+  const h=document.getElementById('svg').clientHeight||window.innerHeight-60;
+  svg.transition().duration(500).call(zoom.transform,d3.zoomIdentity.translate(w/2-first.y,h/2-first.x).scale(1));
+  selectNode(first);
 }
-
-// ── CONTROLS ──
-document.getElementById('sb').onclick=doSearch;
-document.getElementById('si').onkeydown=e=>{if(e.key==='Enter')doSearch();};
-document.getElementById('rb').onclick=()=>{
+function doReset(){
   document.getElementById('si').value='';
-  g.selectAll('.node').classed('found',false);selNode=null;
-  document.getElementById('ic').innerHTML='<div class="emsg">請點選族譜圖中<br/>任一族人節點<br/>查看詳細資料</div>';
-  document.getElementById('apply-btn').style.display='none';
-  document.getElementById('report-btn').style.display='none';
-  fitView();
-};
-document.getElementById('zib').onclick=()=>svg.transition().duration(200).call(zoom.scaleBy,1.4);
-document.getElementById('zob').onclick=()=>svg.transition().duration(200).call(zoom.scaleBy,.7);
-document.getElementById('fb').onclick=fitView;
-document.getElementById('eab').onclick=()=>{expand(root);update(root);setTimeout(fitView,320);};
-document.getElementById('cab').onclick=()=>{root.descendants().forEach(d=>{if(d.depth>=4&&d.children){d._children=d.children;d.children=null;}});update(root);setTimeout(fitView,320);};
-document.getElementById('help-btn-hdr').onclick=()=>document.getElementById('help-overlay').classList.add('show');
-document.getElementById('help-close').onclick=()=>document.getElementById('help-overlay').classList.remove('show');
-document.getElementById('help-overlay').onclick=e=>{if(e.target===document.getElementById('help-overlay'))document.getElementById('help-overlay').classList.remove('show');};
-
-// ── ADD ──
-let reportTarget=null;
-document.getElementById('add-open-btn').onclick=()=>{
-  ['f-name','f-gen','f-spouse','f-by','f-dy','f-note','f-submitter'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('f-parent').value='';
-  document.querySelector('input[name="f-gender"][value="son"]').checked=true;
-  document.getElementById('add-ok').style.display='none';
-  document.getElementById('add-err').style.display='none';
-  document.getElementById('add-overlay').classList.add('show');
-};
-document.getElementById('add-cancel').onclick=()=>document.getElementById('add-overlay').classList.remove('show');
-document.getElementById('add-overlay').onclick=e=>{if(e.target===document.getElementById('add-overlay'))document.getElementById('add-overlay').classList.remove('show');};
-document.getElementById('add-submit').onclick=async()=>{
-  const name=document.getElementById('f-name').value.trim();
-  const gen=document.getElementById('f-gen').value.trim();
-  const parent=document.getElementById('f-parent').value.trim();
-  const err=document.getElementById('add-err');
-  if(!name){err.textContent='請填寫族人姓名';err.style.display='block';return;}
-  if(!gen||isNaN(gen)){err.textContent='請填寫正確的世代數字';err.style.display='block';return;}
-  if(!parent){err.textContent='請填寫父親姓名';err.style.display='block';return;}
-  err.style.display='none';
-  const gender=document.querySelector('input[name="f-gender"]:checked').value;
-  const rec={name,gen,gender,parentName:parent,
-    spouse:document.getElementById('f-spouse').value.trim(),
-    bd:document.getElementById('f-by').value.trim(),
-    note:document.getElementById('f-note').value.trim(),
-    submitter:document.getElementById('f-submitter').value.trim(),
-    submittedAt:new Date().toLocaleString('zh-TW'),status:'pending'};
-  await dbPush('pending',rec);
-  await loadAll();initTree();update(root);updateAdminBadge();
-  document.getElementById('add-ok').style.display='block';
-};
-
-// ── REPORT ──
-document.getElementById('report-cancel').onclick=()=>document.getElementById('report-overlay').classList.remove('show');
-document.getElementById('report-overlay').onclick=e=>{if(e.target===document.getElementById('report-overlay'))document.getElementById('report-overlay').classList.remove('show');};
-document.getElementById('report-submit').onclick=async()=>{
-  const correct=document.getElementById('r-correct').value.trim();
-  const err=document.getElementById('report-err');
-  if(!correct){err.textContent='請填寫正確內容';err.style.display='block';return;}
-  err.style.display='none';
-  const p=reportTarget,pKey=personKey(p.name,p.gen);
-  await dbPush('pendingEdits',{personKey:pKey,personName:p.name,field:document.getElementById('r-field').value,newValue:correct,note:document.getElementById('r-note').value.trim(),submitter:document.getElementById('r-submitter').value.trim(),submittedAt:new Date().toLocaleString('zh-TW'),status:'pending',_type:'report'});
-  await loadAll();updateAdminBadge();
-  document.getElementById('report-ok').style.display='block';
-  ['r-correct','r-note','r-submitter'].forEach(id=>document.getElementById(id).value='');
-};
-
-// ── ADMIN BADGE ──
-function updateAdminBadge(){
-  const total=pending.length+pendingEdits.length;
-  const btn=document.getElementById('admin-trigger'),badge=document.getElementById('admin-badge');
-  badge.textContent=total;
-  const cnt=document.getElementById('pending-cnt');if(cnt)cnt.textContent=total||'';
-  if(total>0){btn.classList.add('has-pending');badge.classList.add('show');}
-  else{btn.classList.remove('has-pending');badge.classList.remove('show');}
+  d3.selectAll('.node').classed('found',false);
+  root.descendants().forEach(d=>{if(d.depth>=4&&d.children){d._children=d.children;d.children=null;}});
+  update(root);fitView();
 }
 
 // ── ADMIN ──
-document.getElementById('admin-trigger').onclick=()=>{
-  document.getElementById('admin-login').style.display='block';
-  document.getElementById('admin-dash').style.display='none';
-  document.getElementById('pwd-input').value='';
-  document.getElementById('pwd-err').style.display='none';
-  document.getElementById('admin-overlay').classList.add('show');
-};
-document.getElementById('admin-cancel').onclick=()=>document.getElementById('admin-overlay').classList.remove('show');
-document.getElementById('admin-overlay').onclick=e=>{if(e.target===document.getElementById('admin-overlay'))document.getElementById('admin-overlay').classList.remove('show');};
-document.getElementById('pwd-submit').onclick=()=>{
-  if(simpleHash(document.getElementById('pwd-input').value)===getPwd()){
-    document.getElementById('pwd-err').style.display='none';
-    document.getElementById('admin-login').style.display='none';
-    document.getElementById('admin-dash').style.display='block';
-    renderAdmin();
-  }else{document.getElementById('pwd-err').style.display='block';}
-};
-document.getElementById('pwd-input').onkeydown=e=>{if(e.key==='Enter')document.getElementById('pwd-submit').click();};
-document.getElementById('admin-logout').onclick=()=>{
-  document.getElementById('admin-dash').style.display='none';
-  document.getElementById('admin-login').style.display='block';
-  document.getElementById('admin-overlay').classList.remove('show');
-};
-document.getElementById('chpwd-btn').onclick=()=>{
-  const np=document.getElementById('new-pwd').value.trim();
-  const err2=document.getElementById('pwd-err2');
-  if(!np||np.length<4){err2.textContent='密碼至少4個字元';err2.style.display='block';return;}
-  setPwd(simpleHash(np));err2.style.display='none';
-  const ok=document.createElement('div');ok.textContent='✅ 密碼已更新';ok.className='msg-box msg-ok';
-  document.getElementById('new-pwd').parentNode.appendChild(ok);setTimeout(()=>ok.remove(),2500);
-};
-document.querySelectorAll('.a-tab').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    document.querySelectorAll('.a-tab').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    const tab=btn.dataset.tab;
-    ['pending','approved','settings'].forEach(t=>{const el=document.getElementById('tab-'+t);if(el)el.style.display=(t===tab)?'block':'none';});
-    renderAdmin();
+let isAdmin=false;
+function updateAdminBadge(){
+  const cnt=pending.length;
+  const btn=document.getElementById('admin-trigger');
+  const badge=document.getElementById('admin-badge');
+  badge.textContent=cnt;
+  if(cnt>0){btn.classList.add('has-pending');badge.classList.add('show');}
+  else{btn.classList.remove('has-pending');badge.classList.remove('show');}
+}
+function renderAdminList(arr,containerId,type){
+  const el=document.getElementById(containerId);
+  if(!arr.length){el.innerHTML='<div class="emsg">（無資料）</div>';return;}
+  el.innerHTML=arr.map(item=>{
+    const info=type==='pending'
+      ?`<div class="admin-card-info">父親：${item.parentName||'-'}　世代：${item.gen||'-'}　性別：${item.gender==='dau'?'女':'男'}</div>
+         <div class="admin-card-info">配偶：${item.spouse||'-'}　生卒：${item.bd||'-'}</div>
+         <div class="admin-card-info" style="color:var(--muted)">申請人：${item.submitter||'匿名'}　${item.submittedAt||''}</div>`
+      :type==='edit'
+      ?`<div class="admin-card-info">欄位：${item.field}　→　${item.newValue}</div>
+         <div class="admin-card-info" style="color:var(--muted)">${item.submittedAt||''}</div>`
+      :`<div class="admin-card-info">父親：${item.parentName||'-'}　世代：${item.gen||'-'}</div>`;
+    return `<div class="admin-card">
+      <div class="admin-card-name">${item.name||item.personName||'（未知）'}</div>
+      ${info}
+      ${isAdmin?`<div style="display:flex;gap:8px;margin-top:8px">
+        <button class="a-approve" onclick="approveItem('${item._fbKey}','${type}')">✅ 核准</button>
+        <button class="a-reject" onclick="rejectItem('${item._fbKey}','${type}')">❌ 拒絕</button>
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+async function approveItem(key,type){
+  if(type==='pending'){
+    const item=pending.find(x=>x._fbKey===key);if(!item)return;
+    await dbPush('approved',{...item,approvedAt:new Date().toLocaleString('zh-TW')});
+    await dbRemove('pending/'+key);
+  }else if(type==='edit'){
+    const item=pendingEdits.find(x=>x._fbKey===key);if(!item)return;
+    await dbPush('approvedEdits',{...item,approvedAt:new Date().toLocaleString('zh-TW')});
+    await dbRemove('pendingEdits/'+key);
+  }
+  await loadAll();initTree();update(root);updateAdminBadge();
+  renderAdminList(pending,'pending-list','pending');
+  renderAdminList([...pendingEdits],'pending-list','edit');
+}
+async function rejectItem(key,type){
+  if(type==='pending')await dbRemove('pending/'+key);
+  else if(type==='edit')await dbRemove('pendingEdits/'+key);
+  await loadAll();initTree();update(root);updateAdminBadge();
+  renderAdminList(pending,'pending-list','pending');
+}
+function renderPendingTab(){
+  const combined=[...pending.map(x=>({...x,_adminType:'pending'})),...pendingEdits.map(x=>({...x,_adminType:'edit'}))];
+  const el=document.getElementById('pending-list');
+  if(!combined.length){el.innerHTML='<div class="emsg">（目前無待審項目）</div>';return;}
+  el.innerHTML=combined.map(item=>{
+    const t=item._adminType;
+    const title=t==='edit'?`✏️ 修改申請：${item.personName||item.name}`:(`＋ 新增族人：${item.name}`);
+    const info=t==='edit'
+      ?`<div class="admin-card-info">欄位：${item.field}　→　${item.newValue}</div><div class="admin-card-info" style="color:var(--muted)">${item.submittedAt||''}</div>`
+      :`<div class="admin-card-info">父親：${item.parentName||'-'}　世代：${item.gen||'-'}　性別：${item.gender==='dau'?'女':'男'}</div><div class="admin-card-info">配偶：${item.spouse||'-'}　生卒：${item.bd||'-'}</div><div class="admin-card-info" style="color:var(--muted)">申請人：${item.submitter||'匿名'}　${item.submittedAt||''}</div>`;
+    return `<div class="admin-card">
+      <div class="admin-card-name">${title}</div>${info}
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="a-approve" onclick="approveItem('${item._fbKey}','${t}')">✅ 核准</button>
+        <button class="a-reject" onclick="rejectItem('${item._fbKey}','${t}')">❌ 拒絕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function renderApprovedTab(){
+  const el=document.getElementById('approved-list');
+  if(!approved.length){el.innerHTML='<div class="emsg">（尚無已核准族人）</div>';return;}
+  el.innerHTML=approved.map(item=>`<div class="admin-card">
+    <div class="admin-card-name">${item.name}</div>
+    <div class="admin-card-info">父親：${item.parentName||'-'}　世代：${item.gen||'-'}</div>
+    <div class="admin-card-info" style="color:var(--muted)">${item.approvedAt||''}</div>
+  </div>`).join('');
+}
+
+// ── ADD / REPORT SUBMIT ──
+async function submitAdd(){
+  const name=document.getElementById('f-name').value.trim();
+  const gen=document.getElementById('f-gen').value.trim();
+  const parent=document.getElementById('f-parent').value.trim();
+  const gender=document.querySelector('input[name="f-gender"]:checked')?.value||'son';
+  const spouse=document.getElementById('f-spouse').value.trim();
+  const bd=document.getElementById('f-by').value.trim();
+  const note=document.getElementById('f-note').value.trim();
+  const submitter=document.getElementById('f-submitter').value.trim();
+  const okEl=document.getElementById('add-ok');const errEl=document.getElementById('add-err');
+  okEl.style.display='none';errEl.style.display='none';
+  if(!name||!gen||!parent){errEl.textContent='請填寫姓名、世代、父親姓名。';errEl.style.display='block';return;}
+  await dbPush('pending',{name,gen:parseInt(gen),parentName:parent,gender,spouse,bd,note,submitter,submittedAt:new Date().toLocaleString('zh-TW'),status:'pending'});
+  okEl.style.display='block';
+  document.getElementById('f-name').value='';document.getElementById('f-gen').value='';
+  document.getElementById('f-parent').value='';document.getElementById('f-spouse').value='';
+  document.getElementById('f-by').value='';document.getElementById('f-note').value='';
+  await loadAll();initTree();update(root);updateAdminBadge();
+}
+async function submitReport(){
+  const field=document.getElementById('r-field').value;
+  const correct=document.getElementById('r-correct').value.trim();
+  const note=document.getElementById('r-note').value.trim();
+  const submitter=document.getElementById('r-submitter').value.trim();
+  const okEl=document.getElementById('report-ok');const errEl=document.getElementById('report-err');
+  okEl.style.display='none';errEl.style.display='none';
+  if(!correct){errEl.textContent='請填寫正確內容。';errEl.style.display='block';return;}
+  if(!selNode){errEl.textContent='請先選擇族人。';errEl.style.display='block';return;}
+  const pKey=personKey(selNode.data.name,selNode.data.gen);
+  await dbPush('pendingEdits',{personKey:pKey,personName:selNode.data.name,field,newValue:correct,note,submitter,submittedAt:new Date().toLocaleString('zh-TW'),status:'pending',_type:'edit'});
+  okEl.style.display='block';
+  document.getElementById('r-correct').value='';document.getElementById('r-note').value='';
+  await loadAll();if(selNode)selectNode(selNode);updateAdminBadge();
+}
+
+// ── INIT & EVENTS ──
+document.addEventListener('DOMContentLoaded',async()=>{
+  // Loading overlay
+  hideLoading();setTimeout(hideLoading,8000);
+  // Init tree
+  initTree();fitView();
+  // Load Firebase
+  await loadAll();initTree();update(root);updateAdminBadge();
+  startListeners();
+
+  // Search
+  document.getElementById('sb').addEventListener('click',doSearch);
+  document.getElementById('si').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
+  document.getElementById('rb').addEventListener('click',doReset);
+
+  // Add modal
+  document.getElementById('add-open-btn').addEventListener('click',()=>{
+    document.getElementById('add-ok').style.display='none';document.getElementById('add-err').style.display='none';
+    document.getElementById('add-overlay').classList.add('show');
+  });
+  document.getElementById('add-cancel').addEventListener('click',()=>document.getElementById('add-overlay').classList.remove('show'));
+  document.getElementById('add-submit').addEventListener('click',submitAdd);
+
+  // Report modal
+  document.getElementById('report-btn').addEventListener('click',()=>{
+    if(!selNode)return;
+    document.getElementById('report-target-info').textContent=`對象：${selNode.data.name}（第${selNode.data.gen}世）`;
+    document.getElementById('report-ok').style.display='none';document.getElementById('report-err').style.display='none';
+    document.getElementById('report-overlay').classList.add('show');
+  });
+  document.getElementById('report-cancel').addEventListener('click',()=>document.getElementById('report-overlay').classList.remove('show'));
+  document.getElementById('report-submit').addEventListener('click',submitReport);
+
+  // Apply btn
+  document.getElementById('apply-btn').addEventListener('click',()=>{
+    if(!selNode)return;
+    document.getElementById('f-parent').value=selNode.data.name;
+    document.getElementById('f-gen').value=(selNode.data.gen||0)+1;
+    document.getElementById('add-ok').style.display='none';document.getElementById('add-err').style.display='none';
+    document.getElementById('add-overlay').classList.add('show');
+  });
+
+  // Help
+  document.getElementById('help-btn-hdr').addEventListener('click',()=>document.getElementById('help-overlay').classList.add('show'));
+  document.getElementById('help-close').addEventListener('click',()=>document.getElementById('help-overlay').classList.remove('show'));
+
+  // Admin
+  document.getElementById('admin-trigger').addEventListener('click',()=>{
+    document.getElementById('admin-login').style.display=isAdmin?'none':'block';
+    document.getElementById('admin-dash').style.display=isAdmin?'block':'none';
+    if(isAdmin){renderPendingTab();renderApprovedTab();}
+    document.getElementById('admin-overlay').classList.add('show');
+  });
+  document.getElementById('admin-cancel').addEventListener('click',()=>document.getElementById('admin-overlay').classList.remove('show'));
+  document.getElementById('pwd-submit').addEventListener('click',()=>{
+    const v=document.getElementById('pwd-input').value;
+    if(simpleHash(v)===getPwd()){
+      isAdmin=true;
+      document.getElementById('admin-login').style.display='none';
+      document.getElementById('admin-dash').style.display='block';
+      document.getElementById('pwd-err').style.display='none';
+      renderPendingTab();renderApprovedTab();
+    }else{
+      document.getElementById('pwd-err').style.display='block';
+    }
+  });
+  document.getElementById('pwd-input').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('pwd-submit').click();});
+  document.getElementById('admin-logout').addEventListener('click',()=>{isAdmin=false;document.getElementById('admin-overlay').classList.remove('show');});
+  document.getElementById('chpwd-btn').addEventListener('click',()=>{
+    const np=document.getElementById('new-pwd').value.trim();
+    const e2=document.getElementById('pwd-err2');
+    if(!np){e2.textContent='請輸入新密碼';e2.style.display='block';return;}
+    setPwd(simpleHash(np));e2.style.display='none';
+    document.getElementById('new-pwd').value='';
+    alert('密碼已更新！');
+  });
+  // Admin tabs
+  document.querySelectorAll('.a-tab').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.a-tab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-pending').style.display='none';
+      document.getElementById('tab-approved').style.display='none';
+      document.getElementById('tab-settings').style.display='none';
+      document.getElementById('tab-'+btn.dataset.tab).style.display='';
+      if(btn.dataset.tab==='pending')renderPendingTab();
+      if(btn.dataset.tab==='approved')renderApprovedTab();
+    });
+  });
+  // Export
+  document.getElementById('export-btn').addEventListener('click',()=>{
+    const data=JSON.stringify({approved,pendingEdits,approvedEdits,exportedAt:new Date().toLocaleString('zh-TW')},null,2);
+    const a=document.createElement('a');a.href='data:application/json,'+encodeURIComponent(data);
+    a.download='張氏族譜備份_'+Date.now()+'.json';a.click();
+  });
+
+  // Zoom & nav
+  document.getElementById('zib').addEventListener('click',()=>svg.transition().duration(200).call(zoom.scaleBy,1.3));
+  document.getElementById('zob').addEventListener('click',()=>svg.transition().duration(200).call(zoom.scaleBy,1/1.3));
+  document.getElementById('fb').addEventListener('click',fitView);
+  document.getElementById('eab').addEventListener('click',()=>{expand(root);update(root);});
+  document.getElementById('cab').addEventListener('click',()=>{
+    root.descendants().forEach(d=>{if(d.depth>=4&&d.children){d._children=d.children;d.children=null;}});
+    update(root);fitView();
   });
 });
-function renderAdmin(){renderPending();renderApproved();}
-function renderPending(){
-  const el=document.getElementById('pending-list');if(!el)return;
-  const cards=[
-    ...pending.map(a=>`<div class="admin-card"><div class="admin-card-name">➕ ${a.name} <span style="color:var(--muted);font-size:13px">第${a.gen}世</span></div><div class="admin-card-info">父：${a.parentName||'—'} ／ 性別：${a.gender==='son'?'男':'女'}</div><div class="admin-card-info" style="color:var(--muted)">申請人：${a.submitter||'—'} ／ ${a.submittedAt}</div><div style="display:flex;gap:8px;margin-top:8px"><button class="a-approve" onclick="approveAdd('${a._fbKey}')">✅ 核准</button><button class="a-reject" onclick="rejectAdd('${a._fbKey}')">❌ 拒絕</button></div></div>`),
-    ...pendingEdits.map(e=>`<div class="admin-card"><div class="admin-card-name">✏️ ${e.personName} <span style="color:var(--muted);font-size:13px">${e._type==='report'?'勘誤':'修改'}</span></div><div class="admin-card-info">欄位：${e.field} → <strong>${e.newValue}</strong></div><div class="admin-card-info" style="color:var(--muted)">申請人：${e.submitter||'—'}</div><div style="display:flex;gap:8px;margin-top:8px"><button class="a-approve" onclick="approveEdit('${e._fbKey}')">✅ 核准</button><button class="a-reject" onclick="rejectEdit('${e._fbKey}')">❌ 拒絕</button></div></div>`)
-  ];
-  el.innerHTML=cards.length?cards.join(''):'<div class="emsg">目前無待審核申請</div>';
-}
-function renderApproved(){
-  const el=document.getElementById('approved-list');if(!el)return;
-  el.innerHTML=approved.length?approved.map(a=>`<div class="admin-card"><div class="admin-card-name">✅ ${a.name} 第${a.gen}世</div><div class="admin-card-info">父：${a.parentName||'—'} ／ ${a.approvedAt||a.submittedAt}</div></div>`).join(''):'<div class="emsg">尚無已核准新增</div>';
-}
-async function approveAdd(fbKey){
-  const item=pending.find(a=>a._fbKey===fbKey);if(!item)return;
-  await Promise.all([dbRemove('pending/'+fbKey),dbPush('approved',{...item,status:'approved',approvedAt:new Date().toLocaleString('zh-TW')})]);
-  await loadAll();initTree();update(root);renderAdmin();updateAdminBadge();
-}
-async function rejectAdd(fbKey){await dbRemove('pending/'+fbKey);await loadAll();initTree();update(root);renderAdmin();updateAdminBadge();}
-async function approveEdit(fbKey){
-  const item=pendingEdits.find(e=>e._fbKey===fbKey);if(!item)return;
-  await Promise.all([dbRemove('pendingEdits/'+fbKey),dbPush('approvedEdits',{...item,status:'approved',approvedAt:new Date().toLocaleString('zh-TW')})]);
-  await loadAll();initTree();update(root);renderAdmin();updateAdminBadge();if(selNode)selectNode(selNode);
-}
-async function rejectEdit(fbKey){await dbRemove('pendingEdits/'+fbKey);await loadAll();renderAdmin();updateAdminBadge();}
-document.getElementById('export-btn').onclick=()=>{
-  const a=document.createElement('a');
-  a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify({approved,approvedEdits},null,2));
-  a.download='族譜備份_'+new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')+'.json';a.click();
-};
-
-// ── LOADING ──
-function hideLoading(){
-  const ov=document.getElementById('loading-overlay');
-  if(ov){ov.style.display='none';ov.classList.add('hidden');}
-}
-setTimeout(hideLoading,5000);
-
-// ── INIT ──
-(async()=>{
-  try{await loadAll();}catch{setSyncStatus('err');}
-  hideLoading();
-  initTree();
-  update(root);
-  setTimeout(fitView,350);
-  updateAdminBadge();
-  startListeners();
-})();
+function hideLoading(){document.getElementById('loading-overlay').classList.add('hidden');}
 </script>
 </body>
 </html>
