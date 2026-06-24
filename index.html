@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+<!-- ── Google Analytics 4 ── -->
+<!-- 步驟：將下方 G-2YRMS2W17V 換成你在 analytics.google.com 取得的 Measurement ID -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2YRMS2W17V"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-2YRMS2W17V');
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>張氏族譜</title>
@@ -413,11 +422,13 @@ body{font-family:'Microsoft JhengHei','微軟正黑體',Arial,sans-serif;backgro
       <button class="a-tab active" data-tab="pending">待審 <span class="badge-count" id="pending-cnt"></span></button>
       <button class="a-tab" data-tab="approved">已核准</button>
       <button class="a-tab" data-tab="history">修改紀錄</button>
+      <button class="a-tab admin-only-tab" data-tab="visitors">訪客紀錄</button>
       <button class="a-tab" data-tab="settings">設定</button>
     </div>
     <div id="tab-pending"><div id="pending-list"></div></div>
     <div id="tab-approved" style="display:none"><div id="approved-list"></div><button id="export-btn">📥 匯出備份</button></div>
     <div id="tab-history" style="display:none"><div id="history-list"></div></div>
+    <div id="tab-visitors" style="display:none"><div id="visitors-list"></div></div>
     <div id="tab-settings" style="display:none">
       <div class="frow" style="margin-top:8px"><label>新管理員密碼</label><input id="new-pwd" type="password" placeholder="輸入新密碼" autocomplete="new-password"/></div>
       <div class="msg-box msg-err" id="pwd-err2" style="display:none"></div>
@@ -543,6 +554,29 @@ async function setReviewerPwd(newPwd){
     {method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(newPwd)});
   const d=await r.json();
   if(d&&d.error)throw new Error(d.error.message);
+}
+// ── 訪客紀錄 ──
+async function logVisitor(){
+  try{
+    // 取得訪客 IP（使用 ipify 公開 API）
+    let ip='unknown';
+    try{const r=await fetch('https://api.ipify.org?format=json',{signal:AbortSignal.timeout(3000)});
+        const d=await r.json();ip=d.ip||'unknown';}catch{}
+    const entry={
+      ip,
+      time:new Date().toLocaleString('zh-TW'),
+      ts:Date.now(),
+      ua:navigator.userAgent.substring(0,150),
+      lang:navigator.language||'',
+      ref:document.referrer||'direct',
+      w:screen.width,
+      h:screen.height,
+    };
+    // 存入 Firebase DB（不需要 auth）
+    await fetch(`${DB}/visitors.json`,{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(entry)});
+  }catch(e){console.log('visitor log skip:',e.message);}
 }
 async function dbGet(p){try{const r=await fetch(`${DB}/${p}.json${_authParam()}`);const d=await r.json();return(d&&d.error)?null:d;}catch{return null;}}
 async function dbPush(p,data){
@@ -1171,14 +1205,13 @@ async function approveItem(key,type){
     await dbRemove('pendingEdits/'+key);
   }
   await loadAll();initTree();update(root);updateAdminBadge();
-  renderAdminList(pending,'pending-list','pending');
-  renderAdminList([...pendingEdits],'pending-list','edit');
+  renderPendingTab();
 }
 async function rejectItem(key,type){
   if(type==='pending')await dbRemove('pending/'+key);
   else if(type==='edit')await dbRemove('pendingEdits/'+key);
   await loadAll();initTree();update(root);updateAdminBadge();
-  renderAdminList(pending,'pending-list','pending');
+  renderPendingTab();
 }
 function renderPendingTab(){
   const combined=[...pending.map(x=>({...x,_adminType:'pending'})),...pendingEdits.map(x=>({...x,_adminType:'edit'}))];
@@ -1355,6 +1388,7 @@ function collapseFullscreen(){
 })();
 
 document.addEventListener('DOMContentLoaded',async()=>{
+  logVisitor(); // 記錄訪客
   // Loading overlay
   hideLoading();setTimeout(hideLoading,8000);
   // Init tree
@@ -1428,7 +1462,9 @@ document.addEventListener('DOMContentLoaded',async()=>{
         isAdmin=false;
         isReviewer=true;
         document.querySelectorAll('.a-tab[data-tab="settings"]').forEach(t=>t.style.display='none');
+    document.querySelectorAll('.a-tab[data-tab="visitors"]').forEach(t=>t.style.display='none');
         document.getElementById('tab-settings').style.display='none';
+    document.getElementById('tab-visitors').style.display='none';
         document.querySelectorAll('.a-tab').forEach(b=>b.classList.remove('active'));
         document.querySelector('.a-tab[data-tab="pending"]').classList.add('active');
         document.getElementById('tab-pending').style.display='';
@@ -1505,6 +1541,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
       if(btn.dataset.tab==='pending')renderPendingTab();
       if(btn.dataset.tab==='approved')renderApprovedTab();
       if(btn.dataset.tab==='history')renderHistoryTab();
+      if(btn.dataset.tab==='visitors')renderVisitorTab();
     });
   });
   // Export
