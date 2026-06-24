@@ -412,10 +412,12 @@ body{font-family:'Microsoft JhengHei','微軟正黑體',Arial,sans-serif;backgro
     <div id="admin-tabs">
       <button class="a-tab active" data-tab="pending">待審 <span class="badge-count" id="pending-cnt"></span></button>
       <button class="a-tab" data-tab="approved">已核准</button>
+      <button class="a-tab" data-tab="history">修改紀錄</button>
       <button class="a-tab" data-tab="settings">設定</button>
     </div>
     <div id="tab-pending"><div id="pending-list"></div></div>
     <div id="tab-approved" style="display:none"><div id="approved-list"></div><button id="export-btn">📥 匯出備份</button></div>
+    <div id="tab-history" style="display:none"><div id="history-list"></div></div>
     <div id="tab-settings" style="display:none">
       <div class="frow" style="margin-top:8px"><label>新管理員密碼</label><input id="new-pwd" type="password" placeholder="輸入新密碼" autocomplete="new-password"/></div>
       <div class="msg-box msg-err" id="pwd-err2" style="display:none"></div>
@@ -716,7 +718,7 @@ function makeEditableRow(label,icon,field,val,pKey){
   const eId=`ei_${field}_${pKey.replace(/[^a-z0-9]/gi,'_')}`;
   const pendingEdit=pendingEdits.find(e=>e.personKey===pKey&&e.field===field);
   const approvedEdit=approvedEdits.find(e=>e.personKey===pKey&&e.field===field);
-  const dispVal=approvedEdit?`<span class="pending-val">${approvedEdit.newValue}</span><span class="pending-badge">已核准</span>`:
+  const dispVal=approvedEdit?approvedEdit.newValue:
     pendingEdit?`<span class="pending-val">${pendingEdit.newValue}</span><span class="pending-badge">審核中</span>`:
     (val||'（無記載）');
   return `<div class="irow">
@@ -744,7 +746,8 @@ async function submitEdit(pKey,field,inputId){
     const pName=node?node.data.name:pKey;
     const key=await dbPush('pendingEdits',{personKey:pKey,personName:pName,field,newValue:val,submittedAt:new Date().toLocaleString('zh-TW'),status:'pending',_type:'edit'});
     if(!key){if(btn){btn.textContent='❌ 失敗，請重試';btn.disabled=false;}return;}
-    await loadAll();if(selNode)selectNode(selNode);
+    if(btn){btn.textContent='✅ 已送出，待審核';btn.style.background='var(--green)';btn.disabled=true;}
+    setTimeout(async()=>{await loadAll();if(selNode)selectNode(selNode);},1500);
   }catch(e){
     console.error('submitEdit error:',e);
     if(btn){btn.textContent='❌ 失敗';btn.disabled=false;}
@@ -1245,6 +1248,33 @@ async function submitReport(){
 // ── INIT & EVENTS ──
 
 // ── MOBILE SWIPE UP/DOWN on info panel ──
+function renderHistoryTab(){
+  const el=document.getElementById('history-list');
+  // Combine approvedEdits + approved new members, sorted newest first
+  const edits=(approvedEdits||[]).map(x=>({...x,_hType:'edit'}));
+  const newMembers=(approved||[]).filter(x=>x.submittedAt).map(x=>({...x,_hType:'member'}));
+  const combined=[...edits,...newMembers].sort((a,b)=>{
+    const da=new Date(a.approvedAt||a.submittedAt||0);
+    const db=new Date(b.approvedAt||b.submittedAt||0);
+    return db-da;
+  });
+  if(!combined.length){el.innerHTML='<div class="emsg">（尚無修改紀錄）</div>';return;}
+  el.innerHTML=combined.map(item=>{
+    if(item._hType==='edit'){
+      return `<div class="admin-card">
+        <div class="admin-card-name">✏️ 修改：${item.personName||''}　<span style="font-size:12px;color:var(--muted)">${item.field}</span></div>
+        <div class="admin-card-info">修改內容：${item.newValue}</div>
+        <div class="admin-card-info" style="color:var(--muted)">核准時間：${item.approvedAt||item.submittedAt||''}</div>
+      </div>`;
+    }else{
+      return `<div class="admin-card">
+        <div class="admin-card-name">＋ 新增族人：${item.name}　<span style="font-size:12px;color:var(--muted)">第${item.gen}世</span></div>
+        <div class="admin-card-info">提交時間：${item.submittedAt||''}</div>
+      </div>`;
+    }
+  }).join('');
+}
+
 function collapseFullscreen(){
   document.getElementById('ip').classList.remove('ip-fullscreen');
 }
@@ -1474,6 +1504,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
       document.getElementById('tab-'+btn.dataset.tab).style.display='';
       if(btn.dataset.tab==='pending')renderPendingTab();
       if(btn.dataset.tab==='approved')renderApprovedTab();
+      if(btn.dataset.tab==='history')renderHistoryTab();
     });
   });
   // Export
