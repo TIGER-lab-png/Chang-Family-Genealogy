@@ -665,9 +665,15 @@ async function loadAll(){
 function startListeners(){
   // 用 polling 取代多條 SSE，避免耗盡瀏覽器連線槽（HTTP/1.1 每 domain 限 6 條）
   const poll=async()=>{
+    const prevPending=pending.length+pendingEdits.length;
     await loadAll();
-    initTree();update(root);updateAdminBadge();
-    if(selNode)selectNode(selNode);
+    updateAdminBadge();
+    // 只有待審數量有變動才重繪樹（新成員被核准等），否則保留畫面位置不動
+    const newPending=pending.length+pendingEdits.length;
+    if(prevPending!==newPending||(approved.length+approvedEdits.length)){
+      // 僅在後台開著時才靜默更新，不影響一般使用者的畫面
+      if(selNode)selectNode(selNode);
+    }
   };
   setInterval(poll,30000); // 每 30 秒自動同步一次
 }
@@ -1150,7 +1156,16 @@ function closeMobilePanel(){
 // ── FUZZY SEARCH ──
 function fuzzyMatchNode(d,q){
   const name=d.data.name||'';
-  if(name.includes(q)||q.includes(name))return true;
+  const nameClean=name.replace(/\s/g,'');
+  const qClean=q.replace(/\s/g,'');
+  // 精確包含
+  if(nameClean.includes(qClean)||qClean.includes(nameClean))return true;
+  // 模糊：查詢的每個字都出現在名字中（順序不限）
+  if(qClean.length>=1&&[...qClean].every(ch=>nameClean.includes(ch)))return true;
+  // 配偶姓名
+  const spouse=d.data.spouse||'';
+  if(spouse.includes(qClean))return true;
+  // 聯絡資料
   const pKey=personKey(name,d.data.gen);
   const ct=personContacts[pKey]||{};
   const ctText=Object.values(ct).join(' ');
